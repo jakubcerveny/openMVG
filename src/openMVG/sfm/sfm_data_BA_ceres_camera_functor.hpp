@@ -413,6 +413,121 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
 };
 
 /**
+ * @brief Ceres functor to use a Pinhole_Intrinsic_Radial_K4
+ *
+ *  Data parameter blocks are the following <2,7,6,3>
+ *  - 2 => dimension of the residuals,
+ *  - 6 => the intrinsic data block [focal, principal point x, principal point y, K1, K2, K3, K4],
+ *  - 6 => the camera extrinsic data block (camera orientation and position) [R;t],
+ *         - rotation(angle axis), and translation [rX,rY,rZ,tx,ty,tz].
+ *  - 3 => a 3D point data block.
+ *
+ */
+struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K4
+{
+  explicit ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K4(const double* const pos_2dpoint)
+  :m_pos_2dpoint(pos_2dpoint)
+  {
+  }
+
+  // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
+  enum : uint8_t {
+    OFFSET_FOCAL_LENGTH = 0,
+    OFFSET_PRINCIPAL_POINT_X = 1,
+    OFFSET_PRINCIPAL_POINT_Y = 2,
+    OFFSET_DISTO_K1 = 3,
+    OFFSET_DISTO_K2 = 4,
+    OFFSET_DISTO_K3 = 5,
+    OFFSET_DISTO_K4 = 6
+  };
+
+  /**
+   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y], k1, k2, k3 )
+   * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
+   *   - 3 for rotation(angle axis), 3 for translation
+   * @param[in] pos_3dpoint
+   * @param[out] out_residuals
+   */
+  template <typename T>
+  bool operator()(
+    const T* const cam_intrinsics,
+    const T* const cam_extrinsics,
+    const T* const pos_3dpoint,
+    T* out_residuals) const
+  {
+    //--
+    // Apply external parameters (Pose)
+    //--
+
+    const T * cam_R = cam_extrinsics;
+    Eigen::Map<const Eigen::Matrix<T, 3, 1>> cam_t(&cam_extrinsics[3]);
+
+    Eigen::Matrix<T, 3, 1> transformed_point;
+    // Rotate the point according the camera rotation
+    ceres::AngleAxisRotatePoint(cam_R, pos_3dpoint, transformed_point.data());
+
+    // Apply the camera translation
+    transformed_point += cam_t;
+
+    // Transform the point from homogeneous to euclidean (undistorted point)
+    const Eigen::Matrix<T, 2, 1> projected_point = transformed_point.hnormalized();
+    //--
+    // Apply intrinsic parameters
+    //--
+
+    const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1 = cam_intrinsics[OFFSET_DISTO_K1];
+    const T& k2 = cam_intrinsics[OFFSET_DISTO_K2];
+    const T& k3 = cam_intrinsics[OFFSET_DISTO_K3];
+    const T& k4 = cam_intrinsics[OFFSET_DISTO_K4];
+
+    // Apply distortion (xd,yd) = disto(x_u,y_u)
+    const T r2 = projected_point.squaredNorm();
+    const T r4 = r2 * r2;
+    const T r6 = r4 * r2;
+    const T r8 = r4 * r4;
+    const T r_coeff = (1.0 + k1 * r2 + k2 * r4 + k3 * r6 + k4 * r8);
+
+    Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
+    residuals << principal_point_x + (projected_point.x() * r_coeff) * focal - m_pos_2dpoint[0],
+                 principal_point_y + (projected_point.y() * r_coeff) * focal - m_pos_2dpoint[1];
+
+    return true;
+  }
+
+  static int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create
+  (
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+    if (weight == 0.0)
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K4, 2, 7, 6, 3>(
+            new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K4(observation.data())));
+    }
+    else
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K4>, 2, 7, 6, 3>
+          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K4>
+            (new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K4(observation.data()), weight)));
+    }
+  }
+
+  const double * m_pos_2dpoint; // The 2D observation
+};
+
+/**
  * @brief Ceres functor with constrained 3D points to use a Pinhole_Intrinsic_Brown_T2
  *
  *  Data parameter blocks are the following <2,8,6,3>
