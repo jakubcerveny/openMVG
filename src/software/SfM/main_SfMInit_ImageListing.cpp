@@ -178,8 +178,9 @@ int main(int argc, char **argv)
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole radial 4\n"
       << "\t 5: Pinhole brown 2\n"
-      << "\t 6: Pinhole with a simple Fish-eye distortion\n"
-      << "\t 8: Spherical camera\n"
+      << "\t 6: Pinhole brown 4\n"
+      << "\t 7: Pinhole with a simple Fish-eye distortion\n"
+      << "\t 9: Spherical camera\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
@@ -392,6 +393,10 @@ int main(int argc, char **argv)
         case PINHOLE_CAMERA_BROWN:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+        break;
+        case PINHOLE_CAMERA_BROWN_K4_T4:
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_K4_T4>
+            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_FISHEYE:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
