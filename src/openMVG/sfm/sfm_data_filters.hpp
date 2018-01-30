@@ -51,6 +51,13 @@ IndexT RemoveOutliers_PixelResidualError
   const unsigned int minTrackLength = 2
 );
 
+// Return residual error mean and stddev.
+void CalculateResidualError
+(
+  SfM_Data &sfm_data,
+  double &meanError, double &stddevError
+);
+
 // Remove tracks that have a small angle (tracks with tiny angle leads to instable 3D points)
 // Return the number of removed tracks
 IndexT RemoveOutliers_AngleError

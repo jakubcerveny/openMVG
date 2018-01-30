@@ -71,6 +71,41 @@ IndexT RemoveOutliers_PixelResidualError
   return outlier_count;
 }
 
+void CalculateResidualError(SfM_Data &sfm_data,
+                            double &meanError, double &stddevError)
+{
+   meanError = stddevError = 0.0;
+   std::size_t count = 0;
+
+   Landmarks::iterator iterTracks = sfm_data.structure.begin();
+   while (iterTracks != sfm_data.structure.end())
+   {
+     Observations & obs = iterTracks->second.obs;
+     Observations::iterator itObs = obs.begin();
+     while (itObs != obs.end())
+     {
+       const View * view = sfm_data.views.at(itObs->first).get();
+       const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
+       const cameras::IntrinsicBase * intrinsic = sfm_data.intrinsics.at(view->id_intrinsic).get();
+       double residual = intrinsic->residual(pose(iterTracks->second.X), itObs->second.x).norm();
+
+       meanError += residual;
+       stddevError += residual*residual;
+       count++;
+
+       ++itObs;
+     }
+     ++iterTracks;
+   }
+
+   meanError /= count;
+   stddevError = std::sqrt(stddevError / count - meanError*meanError);
+}
+
+/*void DecoupleCameras(SfM_Data &sfm_data)
+{
+}*/
+
 // Remove tracks that have a small angle (tracks with tiny angle leads to instable 3D points)
 // Return the number of removed tracks
 IndexT RemoveOutliers_AngleError

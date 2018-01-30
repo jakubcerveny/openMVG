@@ -420,6 +420,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
   // - refine only Structure and translations
+  std::cout << "\nFirst bundle adjustment: structure and translations only." << std::endl;
   bool b_BA_Status = bundle_adjustment_obj.Adjust
     (
       sfm_data_,
@@ -440,6 +441,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     }
 
     // - refine only Structure and Rotations & translations
+    std::cout << "Second bundle adjustment: structure, rotations, translations." << std::endl;
     b_BA_Status = bundle_adjustment_obj.Adjust
       (
         sfm_data_,
@@ -460,6 +462,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   if (b_BA_Status && ReconstructionEngine::intrinsic_refinement_options_ != Intrinsic_Parameter_Type::NONE) {
     // - refine all: Structure, motion:{rotations, translations} and optics:{intrinsics}
+    std::cout << "Third bundle adjustment: structure, rotations, translations and intrinsics." << std::endl;
     b_BA_Status = bundle_adjustment_obj.Adjust
       (
         sfm_data_,
@@ -478,16 +481,24 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     }
   }
 
+  double meanError, stddevError;
+  CalculateResidualError(sfm_data_, meanError, stddevError);
+  std::cout << "Mean error: " << meanError << ", stddev: " << stddevError
+            << "\n" << std::endl;
+
   // Remove outliers (max_angle, residual error)
-  const size_t pointcount_initial = sfm_data_.structure.size();
-  RemoveOutliers_PixelResidualError(sfm_data_, 4.0);
-  const size_t pointcount_pixelresidual_filter = sfm_data_.structure.size();
+  std::cout << "Outlier removal:\n"
+            << " - initial cloud size: " << sfm_data_.structure.size()
+            << std::endl;
+
+  double threshold = meanError + 1.5*stddevError;
+  RemoveOutliers_PixelResidualError(sfm_data_, threshold/*4.0*/);
+  std::cout << " - after sigma filter (threshold " << threshold << " px): "
+            << sfm_data_.structure.size() << std::endl;
+
   RemoveOutliers_AngleError(sfm_data_, 2.0);
-  const size_t pointcount_angular_filter = sfm_data_.structure.size();
-  std::cout << "Outlier removal (remaining #points):\n"
-    << "\t initial structure size #3DPoints: " << pointcount_initial << "\n"
-    << "\t\t pixel residual filter  #3DPoints: " << pointcount_pixelresidual_filter << "\n"
-    << "\t\t angular filter         #3DPoints: " << pointcount_angular_filter << std::endl;
+  std::cout << " - after angular filter: "
+            << sfm_data_.structure.size() << std::endl;
 
   if (!sLogging_file_.empty())
   {
@@ -519,7 +530,13 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     Control_Point_Parameter(),
     this->b_use_motion_prior_);
 
+  std::cout << "\nFinal bundle adjustment..." << std::endl;
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
+
+  CalculateResidualError(sfm_data_, meanError, stddevError);
+  std::cout << "Mean error: " << meanError << ", stddev: " << stddevError
+            << "\n" << std::endl;
+
   if (b_BA_Status && !sLogging_file_.empty())
   {
     Save(sfm_data_,
