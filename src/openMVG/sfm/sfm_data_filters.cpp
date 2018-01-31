@@ -102,9 +102,33 @@ void CalculateResidualError(SfM_Data &sfm_data,
    stddevError = std::sqrt(stddevError / count - meanError*meanError);
 }
 
-/*void DecoupleCameras(SfM_Data &sfm_data)
+void DecoupleViews(SfM_Data &sfm_data)
 {
-}*/
+   Poses unique_poses;
+   Intrinsics unique_intrin;
+
+   for (Views::iterator
+        iterViews = sfm_data.views.begin();
+        iterViews != sfm_data.views.end();
+        ++iterViews)
+   {
+      View *view = iterViews->second.get();
+
+      const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const cameras::IntrinsicBase *intrinsic =
+            sfm_data.intrinsics.at(view->id_intrinsic).get();
+
+      unique_poses[view->id_view] = pose;
+      unique_intrin[view->id_view] =
+            std::shared_ptr<cameras::IntrinsicBase>(intrinsic->clone());
+
+      view->id_pose = view->id_view;
+      view->id_intrinsic = view->id_view;
+   }
+
+   sfm_data.poses.swap(unique_poses);
+   sfm_data.intrinsics.swap(unique_intrin);
+}
 
 // Remove tracks that have a small angle (tracks with tiny angle leads to instable 3D points)
 // Return the number of removed tracks

@@ -530,7 +530,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     Control_Point_Parameter(),
     this->b_use_motion_prior_);
 
-  std::cout << "\nFinal bundle adjustment..." << std::endl;
+  std::cout << "\nFourth bundle adjustment..." << std::endl;
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 
   CalculateResidualError(sfm_data_, meanError, stddevError);
@@ -543,6 +543,43 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
       stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_04_outlier_removed", "ply"),
       ESfM_Data(EXTRINSICS | STRUCTURE));
   }
+
+  // Fifth BA
+  std::cout << "Outlier removal:\n"
+            << " - initial cloud size: " << sfm_data_.structure.size()
+            << std::endl;
+
+  threshold = meanError + 1.5*stddevError;
+  RemoveOutliers_PixelResidualError(sfm_data_, threshold/*4.0*/);
+  std::cout << " - after sigma filter (threshold " << threshold << " px): "
+            << sfm_data_.structure.size() << std::endl;
+
+  std::cout << "\nFifth bundle adjustment..." << std::endl;
+  b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
+
+  CalculateResidualError(sfm_data_, meanError, stddevError);
+  std::cout << "Mean error: " << meanError << ", stddev: " << stddevError
+            << "\n" << std::endl;
+
+  // Final BA
+  std::cout << "Outlier removal:\n"
+            << " - initial cloud size: " << sfm_data_.structure.size()
+            << std::endl;
+
+  threshold = meanError + 1.5*stddevError;
+  RemoveOutliers_PixelResidualError(sfm_data_, threshold/*4.0*/);
+  std::cout << " - after sigma filter (threshold " << threshold << " px): "
+            << sfm_data_.structure.size() << std::endl;
+
+  std::cout << "\nDecoupling views." << std::endl;
+  DecoupleViews(sfm_data_);
+
+  std::cout << "\nFinal bundle adjustment..." << std::endl;
+  b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
+
+  CalculateResidualError(sfm_data_, meanError, stddevError);
+  std::cout << "Mean error: " << meanError << ", stddev: " << stddevError
+            << "\n" << std::endl;
 
   return b_BA_Status;
 }

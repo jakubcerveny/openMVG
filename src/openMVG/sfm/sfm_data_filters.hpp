@@ -58,6 +58,9 @@ void CalculateResidualError
   double &meanError, double &stddevError
 );
 
+// Modify views so that each view has its own copy of the pose and its own intrinsic.
+void DecoupleViews(SfM_Data &sfm_data);
+
 // Remove tracks that have a small angle (tracks with tiny angle leads to instable 3D points)
 // Return the number of removed tracks
 IndexT RemoveOutliers_AngleError
