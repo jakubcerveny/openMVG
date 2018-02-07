@@ -99,6 +99,8 @@ ceres::CostFunction * IntrinsicsToCostFunction
       return ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2::Create(observation, weight);
     case PINHOLE_CAMERA_BROWN_K4_T4:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Brown_K4_T4::Create(observation, weight);
+    case PINHOLE_CAMERA_RATIONAL_T2:
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Rational_T2::Create(observation, weight);
     case PINHOLE_CAMERA_FISHEYE:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
     case CAMERA_SPHERICAL:
@@ -466,8 +468,8 @@ bool Bundle_Adjustment_Ceres::Adjust
     static_cast<ceres::LinearSolverType>(ceres_options_.linear_solver_type_);
   ceres_config_options.sparse_linear_algebra_library_type =
     static_cast<ceres::SparseLinearAlgebraLibraryType>(ceres_options_.sparse_linear_algebra_library_type_);
-  ceres_config_options.minimizer_progress_to_stdout = ceres_options_.bVerbose_;
-  ceres_config_options.logging_type = ceres::SILENT;
+  ceres_config_options.minimizer_progress_to_stdout = true; //ceres_options_.bVerbose_;
+  ceres_config_options.logging_type = ceres::PER_MINIMIZER_ITERATION;
   ceres_config_options.num_threads = ceres_options_.nb_threads_;
   ceres_config_options.num_linear_solver_threads = ceres_options_.nb_threads_;
   ceres_config_options.parameter_tolerance = ceres_options_.parameter_tolerance_;
@@ -475,6 +477,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Solve BA
   ceres::Solver::Summary summary;
   ceres::Solve(ceres_config_options, &problem, &summary);
+
   if (ceres_options_.bCeres_summary_)
     std::cout << summary.FullReport() << std::endl;
 

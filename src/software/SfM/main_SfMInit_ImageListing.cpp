@@ -398,6 +398,10 @@ int main(int argc, char **argv)
           intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_K4_T4>
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
+        case PINHOLE_CAMERA_RATIONAL_T2:
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Rational_T2>
+            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+        break;
         case PINHOLE_CAMERA_FISHEYE:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess

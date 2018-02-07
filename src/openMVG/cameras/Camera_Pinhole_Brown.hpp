@@ -268,8 +268,11 @@ class Pinhole_Intrinsic_Brown_K4_T4 : public Pinhole_Intrinsic
     * @param k1 First radial distortion coefficient
     * @param k2 Second radial distortion coefficient
     * @param k3 Third radial distortion coefficient
+    * @param k4 Fourth radial distortion coefficient
     * @param t1 First tangential distortion coefficient
     * @param t2 Second tangential distortion coefficient
+    * @param t3 Third tangential distortion coefficient
+    * @param t4 Fourth tangential distortion coefficient
     */
     Pinhole_Intrinsic_Brown_K4_T4(
       int w = 0, int h = 0,

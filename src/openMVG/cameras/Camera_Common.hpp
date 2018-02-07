@@ -45,8 +45,9 @@ enum EINTRINSIC
   PINHOLE_CAMERA_RADIAL4 = 4, // radial distortion K1,K2,K3,K4
   PINHOLE_CAMERA_BROWN = 5, // radial distortion K1,K2,K3, tangential distortion T1,T2
   PINHOLE_CAMERA_BROWN_K4_T4 = 6, // radial distortion K1,K2,K3,K4 tangential distortion T1,T2,T3,T4
-  PINHOLE_CAMERA_FISHEYE = 7, // a simple Fish-eye distortion model with 4 distortion coefficients
-  PINHOLE_CAMERA_END = 8,
+  PINHOLE_CAMERA_RATIONAL_T2 = 7, // rational radial distortion K1,K2,K3/K4,K5,K6 tangential distortion T1,T2
+  PINHOLE_CAMERA_FISHEYE = 8, // a simple Fish-eye distortion model with 4 distortion coefficients
+  PINHOLE_CAMERA_END = 9,
   CAMERA_SPHERICAL = PINHOLE_CAMERA_END + 1
 };
 
