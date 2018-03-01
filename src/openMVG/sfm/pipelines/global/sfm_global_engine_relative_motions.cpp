@@ -419,8 +419,10 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   // Refine sfm_scene (in a 3 iteration process (free the parameters regarding their incertainty order)):
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
+  bundle_adjustment_obj.ceres_options().bPerIterationLogging_ = true;
+
   // - refine only Structure and translations
-  std::cout << "\nFirst bundle adjustment: structure and translations only." << std::endl;
+  std::cout << "\nFirst bundle adjustment: structure and translations only.\n" << std::endl;
   bool b_BA_Status = bundle_adjustment_obj.Adjust
     (
       sfm_data_,
@@ -436,12 +438,13 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     if (!sLogging_file_.empty())
     {
       Save(sfm_data_,
-        stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_00_refine_T_Xi", "ply"),
+        stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
+                                 "structure_00_refine_T_Xi", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
     }
 
     // - refine only Structure and Rotations & translations
-    std::cout << "Second bundle adjustment: structure, rotations, translations." << std::endl;
+    std::cout << "Second bundle adjustment: structure, rotations, translations.\n" << std::endl;
     b_BA_Status = bundle_adjustment_obj.Adjust
       (
         sfm_data_,
@@ -455,14 +458,15 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     if (b_BA_Status && !sLogging_file_.empty())
     {
       Save(sfm_data_,
-        stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_01_refine_RT_Xi", "ply"),
+        stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
+                                 "structure_01_refine_RT_Xi", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
     }
   }
 
   if (b_BA_Status && ReconstructionEngine::intrinsic_refinement_options_ != Intrinsic_Parameter_Type::NONE) {
     // - refine all: Structure, motion:{rotations, translations} and optics:{intrinsics}
-    std::cout << "Third bundle adjustment: structure, rotations, translations and intrinsics." << std::endl;
+    std::cout << "Third bundle adjustment: structure, rotations, translations and intrinsics.\n" << std::endl;
     b_BA_Status = bundle_adjustment_obj.Adjust
       (
         sfm_data_,
@@ -473,10 +477,12 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
           Control_Point_Parameter(),
           this->b_use_motion_prior_)
       );
+
     if (b_BA_Status && !sLogging_file_.empty())
     {
       Save(sfm_data_,
-        stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_02_refine_KRT_Xi", "ply"),
+        stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
+                                 "structure_02_refine_KRT_Xi", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
     }
   }
@@ -503,7 +509,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   if (!sLogging_file_.empty())
   {
     Save(sfm_data_,
-      stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_03_outlier_removed", "ply"),
+      stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
+                               "structure_03_outlier_removed", "ply"),
       ESfM_Data(EXTRINSICS | STRUCTURE));
   }
 
@@ -530,7 +537,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     Control_Point_Parameter(),
     this->b_use_motion_prior_);
 
-  std::cout << "\nFourth bundle adjustment..." << std::endl;
+  std::cout << "\nFourth bundle adjustment...\n" << std::endl;
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 
   CalculateResidualError(sfm_data_, meanError, stddevError);
@@ -540,7 +547,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   if (b_BA_Status && !sLogging_file_.empty())
   {
     Save(sfm_data_,
-      stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_04_outlier_removed", "ply"),
+      stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
+                               "structure_04_outlier_removed", "ply"),
       ESfM_Data(EXTRINSICS | STRUCTURE));
   }
 
@@ -554,12 +562,20 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   std::cout << " - after sigma filter (threshold " << threshold << " px): "
             << sfm_data_.structure.size() << std::endl;
 
-  std::cout << "\nFifth bundle adjustment..." << std::endl;
+  std::cout << "\nFifth bundle adjustment...\n" << std::endl;
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 
   CalculateResidualError(sfm_data_, meanError, stddevError);
   std::cout << "Mean error: " << meanError << ", stddev: " << stddevError
             << "\n" << std::endl;
+
+  if (b_BA_Status && !sLogging_file_.empty())
+  {
+    Save(sfm_data_,
+      stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
+                               "structure_05_outlier_removed", "ply"),
+      ESfM_Data(EXTRINSICS | STRUCTURE));
+  }
 
   // Final BA
   std::cout << "Outlier removal:\n"
@@ -574,12 +590,20 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   std::cout << "\nDecoupling views." << std::endl;
   DecoupleViews(sfm_data_);
 
-  std::cout << "\nFinal bundle adjustment..." << std::endl;
+  std::cout << "\nFinal bundle adjustment...\n" << std::endl;
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 
   CalculateResidualError(sfm_data_, meanError, stddevError);
   std::cout << "Mean error: " << meanError << ", stddev: " << stddevError
             << "\n" << std::endl;
+
+  if (b_BA_Status && !sLogging_file_.empty())
+  {
+    Save(sfm_data_,
+      stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
+                               "structure_06_final", "ply"),
+      ESfM_Data(EXTRINSICS | STRUCTURE));
+  }
 
   return b_BA_Status;
 }

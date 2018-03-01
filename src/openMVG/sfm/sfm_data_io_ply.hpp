@@ -25,7 +25,7 @@ inline bool Save_PLY
   const SfM_Data & sfm_data,
   const std::string & filename,
   ESfM_Data flags_part,
-  bool b_write_in_ascii = false
+  bool b_write_in_ascii = true
 )
 {
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;

@@ -113,6 +113,9 @@ void DecoupleViews(SfM_Data &sfm_data)
         ++iterViews)
    {
       View *view = iterViews->second.get();
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view)) {
+         continue;
+      }
 
       const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
       const cameras::IntrinsicBase *intrinsic =

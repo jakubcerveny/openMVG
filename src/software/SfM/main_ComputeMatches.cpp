@@ -408,6 +408,7 @@ int main(int argc, char **argv)
   {
     system::Timer timer;
     const double d_distance_ratio = 0.6;
+    const double pixel_tol = 4.0;
 
     PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
@@ -415,7 +416,7 @@ int main(int argc, char **argv)
       case HOMOGRAPHY_MATRIX:
       {
         const bool bGeometric_only_guided_matching = true;
-        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(pixel_tol, imax_iteration),
           map_PutativesMatches, bGuided_matching,
           bGeometric_only_guided_matching ? -1.0 : d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
@@ -423,14 +424,14 @@ int main(int argc, char **argv)
       break;
       case FUNDAMENTAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(pixel_tol, imax_iteration),
           map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(pixel_tol, imax_iteration),
           map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 

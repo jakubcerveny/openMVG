@@ -34,6 +34,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
   struct BA_Ceres_options
   {
     bool bVerbose_;
+    bool bPerIterationLogging_;
     unsigned int nb_threads_;
     bool bCeres_summary_;
     int linear_solver_type_;
