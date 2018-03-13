@@ -9,16 +9,22 @@
 #ifndef OPENMVG_SFM_SFM_DATA_TRANSFORM_HPP
 #define OPENMVG_SFM_SFM_DATA_TRANSFORM_HPP
 
-namespace openMVG {
+#include "openMVG/geometry/Similarity3.hpp"
 
-namespace geometry
-{
-  struct Similarity3;
-} // namespace geometry
+namespace openMVG {
 
 namespace sfm {
 
 struct SfM_Data;
+
+/** Triangulate control points and find best rigid fit of the scene to the
+*   provided control point 3D positions.
+*/
+bool FindControlPointsRigidFit
+(
+  const SfM_Data & sfm_data,
+  geometry::Similarity3 & similarity
+);
 
 /// Apply a similarity to the SfM_Data scene (transform landmarks & camera poses)
 void ApplySimilarity

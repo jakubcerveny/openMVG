@@ -24,6 +24,7 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/sfm_data_transform.hpp"
 #include "openMVG/sfm/sfm_filters.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
@@ -421,6 +422,17 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
   bundle_adjustment_obj.ceres_options().bPerIterationLogging_ = true;
 
+  Landmarks gcps;
+  if (sfm_data_.control_points.size())
+  {
+    // temporarily remove GCPs (we will add them later)
+    sfm_data_.control_points.swap(gcps);
+  }
+  else
+  {
+    std::cout << "No GCPs defined." << std::endl;
+  }
+
   // - refine only Structure and translations
   std::cout << "\nFirst bundle adjustment: structure and translations only.\n" << std::endl;
   bool b_BA_Status = bundle_adjustment_obj.Adjust
@@ -484,6 +496,24 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
         stlplus::create_filespec(stlplus::folder_part(sLogging_file_),
                                  "structure_02_refine_KRT_Xi", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
+    }
+  }
+
+  // rigid fit to GCPs now, if present
+  if (gcps.size())
+  {
+    sfm_data_.control_points.swap(gcps);
+    geometry::Similarity3 sim;
+    if (FindControlPointsRigidFit(sfm_data_, sim))
+    {
+      std::cout << "Found GCP rigid fit, applying." << std::endl;
+      ApplySimilarity(sim, sfm_data_);
+    }
+    else
+    {
+      std::cerr << "Could not find GCP rigid fit! Disabling GCPs..."
+                << std::endl;
+      sfm_data_.control_points.swap(gcps);
     }
   }
 
