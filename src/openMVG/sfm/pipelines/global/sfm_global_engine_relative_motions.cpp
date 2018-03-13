@@ -617,8 +617,11 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   std::cout << " - after sigma filter (threshold " << threshold << " px): "
             << sfm_data_.structure.size() << std::endl;
 
-  std::cout << "\nDecoupling views." << std::endl;
-  DecoupleViews(sfm_data_);
+  if (b_decouple_views_)
+  {
+    std::cout << "\nDecoupling views." << std::endl;
+    DecoupleViews(sfm_data_);
+  }
 
   std::cout << "\nFinal bundle adjustment...\n" << std::endl;
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);

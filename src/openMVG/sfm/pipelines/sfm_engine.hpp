@@ -60,6 +60,11 @@ public:
     b_use_motion_prior_ = rhs;
   }
 
+  void Set_Decouple_Views(bool decouple)
+  {
+    b_decouple_views_ = decouple;
+  }
+
   const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
 protected:
@@ -75,6 +80,7 @@ protected:
   //-----
   cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
   bool b_use_motion_prior_;
+  bool b_decouple_views_;
 };
 
 } // namespace sfm

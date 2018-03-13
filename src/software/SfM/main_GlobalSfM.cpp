@@ -53,6 +53,7 @@ int main(int argc, char **argv)
   int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   bool b_use_motion_priors = false;
+  bool b_decouple_views = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -62,6 +63,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
   cmd.add( make_switch('P', "prior_usage") );
+  cmd.add( make_switch('D', "decouple") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -93,6 +95,7 @@ int main(int argc, char **argv)
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions)\n"
+    << "[-D|--decouple] Give separate intrinsics to each view before final adjustment.\n"
     << "[-M|--match_file] path to the match file to use.\n"
     << std::endl;
 
@@ -190,7 +193,9 @@ int main(int argc, char **argv)
   // Configure reconstruction parameters
   sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   b_use_motion_priors = cmd.used('P');
+  b_decouple_views = cmd.used('D');
   sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
+  sfmEngine.Set_Decouple_Views(b_decouple_views);
 
   // Configure motion averaging method
   sfmEngine.SetRotationAveragingMethod(
