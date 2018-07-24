@@ -130,7 +130,7 @@ int main(int argc, char **argv)
       << "  For Binary based descriptor:\n"
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
-      << "  use the found model to improve the pairwise correspondences."
+      << "  use the found model to improve the pairwise correspondences.\n"
       << "[-c|--cache_size]\n"
       << "  Use a regions cache (only cache_size regions will be stored in memory)"
       << "  If not used, all regions will be load in memory."
@@ -483,6 +483,16 @@ int main(int argc, char **argv)
     PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
       map_GeometricMatches,
       stlplus::create_filespec(sMatchesDirectory, "GeometricAdjacencyMatrix", "svg"));
+
+    // export adjacency as a text file (usable as --pair_list)
+    {
+      std::ofstream f(stlplus::create_filespec(sMatchesDirectory, "adjacency", "txt"));
+      for (const auto &it : map_GeometricMatches)
+      {
+        const Pair &pair = it.first;
+        f << pair.first << " " << pair.second << "\n";
+      }
+    }
 
     //-- export view pair graph once geometric filter have been done
     {
